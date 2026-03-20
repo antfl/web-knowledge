@@ -19,6 +19,9 @@
 - **Promise**：理解 Promise 的工作原理和链式调用
   - [Promise 详解](./JavaScript/4.promise/promise.md) - Promise 的状态、方法和实际应用
 
+- **事件循环**：掌握 JavaScript 的异步执行机制
+  - [事件循环详解](./JavaScript/7.event-loop/event-loop.md) - 宏任务、微任务、async/await 执行顺序
+
 #### 3. 原型链
 - **原型链**：掌握 JavaScript 的继承机制和原型链查找
   - [原型链详解](./JavaScript/6.prototype/prototype.md) - 原型链的结构、继承方式和最佳实践
