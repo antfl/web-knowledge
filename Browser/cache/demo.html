@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>浏览器缓存示例</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        .example {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .code-block {
+            background-color: #f0f0f0;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            margin: 10px 0;
+        }
+        button {
+            padding: 8px 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .result {
+            margin: 10px 0;
+            padding: 10px;
+            background-color: #e8f5e8;
+            border-radius: 5px;
+        }
+        .warning {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>浏览器缓存示例</h1>
+        
+        <!-- 1. 缓存概述 -->
+        <div class="example">
+            <h2>1. 缓存概述</h2>
+            <p>本示例展示了浏览器缓存的基本概念和使用方法，包括强缓存、协商缓存、Service Worker 缓存和 Cache API 等。</p>
+        </div>
+        
+        <!-- 2. 强缓存示例 -->
+        <div class="example">
+            <h2>2. 强缓存示例</h2>
+            <p>强缓存通过设置 HTTP 响应头中的 Cache-Control 或 Expires 字段来控制。以下是一个简单的示例：</p>
+            <div class="code-block">
+<!-- 服务器响应头示例 -->
+Cache-Control: max-age=3600, public
+Expires: Wed, 21 Oct 2026 07:28:00 GMT
+            </div>
+            <p>在浏览器中，强缓存的资源会显示为：</p>
+            <ul>
+                <li>200 (from memory cache) - 从内存缓存获取</li>
+                <li>200 (from disk cache) - 从磁盘缓存获取</li>
+            </ul>
+        </div>
+        
+        <!-- 3. 协商缓存示例 -->
+        <div class="example">
+            <h2>3. 协商缓存示例</h2>
+            <p>协商缓存通过 Last-Modified/If-Modified-Since 和 ETag/If-None-Match 字段来控制。</p>
+            <div class="code-block">
+<!-- 第一次请求响应头 -->
+Last-Modified: Wed, 21 Oct 2026 07:28:00 GMT
+ETag: "abc123"
+
+<!-- 第二次请求请求头 -->
+If-Modified-Since: Wed, 21 Oct 2026 07:28:00 GMT
+If-None-Match: "abc123"
+
+<!-- 服务器响应 -->
+304 Not Modified (未变化时)
+200 OK (已变化时)
+            </div>
+        </div>
+        
+        <!-- 4. Service Worker 缓存示例 -->
+        <div class="example">
+            <h2>4. Service Worker 缓存示例</h2>
+            <p>Service Worker 可以拦截网络请求，实现更强大的缓存策略。</p>
+            <button onclick="registerServiceWorker()">注册 Service Worker</button>
+            <button onclick="unregisterServiceWorker()">注销 Service Worker</button>
+            <div id="sw-result" class="result"></div>
+            
+            <h3>Service Worker 代码 (sw.js)</h3>
+            <div class="code-block">
+// sw.js
+self.addEventListener('fetch', event => {
+  event.respondWith(
+    caches.match(event.request)
+      .then(response => {
+        // 如果缓存中有响应，直接返回
+        if (response) {
+          return response;
+        }
+        
+        // 否则发起网络请求
+        return fetch(event.request)
+          .then(response => {
+            // 缓存新的响应
+            if (response && response.status === 200) {
+              const responseToCache = response.clone();
+              caches.open('v1')
+                .then(cache => {
+                  cache.put(event.request, responseToCache);
+                });
+            }
+            return response;
+          });
+      })
+  );
+});
+            </div>
+        </div>
+        
+        <!-- 5. Cache API 示例 -->
+        <div class="example">
+            <h2>5. Cache API 示例</h2>
+            <p>Cache API 提供了编程方式操作缓存的能力。</p>
+            <button onclick="openCache()">打开缓存</button>
+            <button onclick="addResourceToCache()">添加资源到缓存</button>
+            <button onclick="getFromCache()">从缓存获取资源</button>
+            <button onclick="deleteCache()">删除缓存</button>
+            <div id="cache-result" class="result"></div>
+        </div>
+        
+        <!-- 6. 缓存调试示例 -->
+        <div class="example">
+            <h2>6. 缓存调试示例</h2>
+            <p>使用浏览器开发者工具调试缓存：</p>
+            <ol>
+                <li>打开 Chrome 开发者工具 (F12)</li>
+                <li>切换到 Network 面板</li>
+                <li>勾选 Disable cache（开发模式下）</li>
+                <li>刷新页面，查看资源的缓存状态</li>
+                <li>切换到 Application 面板，查看 Cache Storage</li>
+            </ol>
+            <div class="warning">
+                <strong>提示：</strong> 刷新本页面，观察 Network 面板中资源的缓存状态。
+            </div>
+        </div>
+        
+        <!-- 7. 缓存策略示例 -->
+        <div class="example">
+            <h2>7. 缓存策略示例</h2>
+            <h3>不同资源的缓存策略：</h3>
+            <table border="1" style="width: 100%; border-collapse: collapse; margin: 10px 0;">
+                <tr>
+                    <th>资源类型</th>
+                    <th>缓存策略</th>
+                    <th>示例</th>
+                </tr>
+                <tr>
+                    <td>HTML</td>
+                    <td>协商缓存</td>
+                    <td>Cache-Control: no-cache</td>
+                </tr>
+                <tr>
+                    <td>CSS</td>
+                    <td>强缓存 + 版本号</td>
+                    <td>Cache-Control: max-age=31536000, public</td>
+                </tr>
+                <tr>
+                    <td>JavaScript</td>
+                    <td>强缓存 + 版本号</td>
+                    <td>Cache-Control: max-age=31536000, public</td>
+                </tr>
+                <tr>
+                    <td>图片</td>
+                    <td>强缓存 + 版本号</td>
+                    <td>Cache-Control: max-age=31536000, public</td>
+                </tr>
+                <tr>
+                    <td>API 数据</td>
+                    <td>协商缓存</td>
+                    <td>Cache-Control: no-cache</td>
+                </tr>
+            </table>
+            
+            <h3>资源版本号示例：</h3>
+            <div class="code-block">
+<!-- 版本号方式 -->
+<link rel="stylesheet" href="style.css?v=1.0.0">
+<script src="script.js?v=1.0.0"></script>
+
+<!-- 文件名哈希方式 -->
+<link rel="stylesheet" href="style.abc123.css">
+<script src="script.def456.js"></script>
+            </div>
+        </div>
+        
+        <!-- 8. 缓存性能测试 -->
+        <div class="example">
+            <h2>8. 缓存性能测试</h2>
+            <div style="margin-bottom: 10px;">
+                <button onclick="testCachePerformance()">测试网络请求缓存</button>
+                <button onclick="testServiceWorkerCache()">测试 Service Worker 缓存</button>
+                <button onclick="testCacheAPIPerformance()">测试 Cache API 缓存</button>
+                <button onclick="testMultipleResources()">测试多资源缓存</button>
+            </div>
+            <div id="performance-result" class="result"></div>
+            <div id="performance-chart" style="margin-top: 20px; height: 300px;"></div>
+        </div>
+    </div>
+    
+    <script>
+        // 4. Service Worker 相关函数
+        function registerServiceWorker() {
+            const resultDiv = document.getElementById('sw-result');
+            
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('sw.js')
+                    .then(registration => {
+                        resultDiv.innerHTML = `Service Worker 注册成功: ${registration.scope}`;
+                    })
+                    .catch(error => {
+                        resultDiv.innerHTML = `Service Worker 注册失败: ${error.message}`;
+                    });
+            } else {
+                resultDiv.innerHTML = '当前浏览器不支持 Service Worker';
+            }
+        }
+        
+        function unregisterServiceWorker() {
+            const resultDiv = document.getElementById('sw-result');
+            
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations()
+                    .then(registrations => {
+                        for (let registration of registrations) {
+                            registration.unregister();
+                        }
+                        resultDiv.innerHTML = 'Service Worker 注销成功';
+                    })
+                    .catch(error => {
+                        resultDiv.innerHTML = `Service Worker 注销失败: ${error.message}`;
+                    });
+            } else {
+                resultDiv.innerHTML = '当前浏览器不支持 Service Worker';
+            }
+        }
+        
+        // 5. Cache API 相关函数
+        function openCache() {
+            const resultDiv = document.getElementById('cache-result');
+            
+            if ('caches' in window) {
+                caches.open('v1')
+                    .then(cache => {
+                        resultDiv.innerHTML = '缓存打开成功';
+                    })
+                    .catch(error => {
+                        resultDiv.innerHTML = `缓存打开失败: ${error.message}`;
+                    });
+            } else {
+                resultDiv.innerHTML = '当前浏览器不支持 Cache API';
+            }
+        }
+        
+        function addResourceToCache() {
+            const resultDiv = document.getElementById('cache-result');
+            
+            if ('caches' in window) {
+                caches.open('v1')
+                    .then(cache => {
+                        return cache.addAll([
+                            '/',
+                            '/Browser/cache/demo.html'
+                        ]);
+                    })
+                    .then(() => {
+                        resultDiv.innerHTML = '资源添加到缓存成功';
+                    })
+                    .catch(error => {
+                        resultDiv.innerHTML = `资源添加到缓存失败: ${error.message}`;
+                    });
+            } else {
+                resultDiv.innerHTML = '当前浏览器不支持 Cache API';
+            }
+        }
+        
+        function getFromCache() {
+            const resultDiv = document.getElementById('cache-result');
+            
+            if ('caches' in window) {
+                caches.match('/Browser/cache/demo.html')
+                    .then(response => {
+                        if (response) {
+                            resultDiv.innerHTML = '从缓存获取资源成功';
+                        } else {
+                            resultDiv.innerHTML = '缓存中不存在该资源';
+                        }
+                    })
+                    .catch(error => {
+                        resultDiv.innerHTML = `从缓存获取资源失败: ${error.message}`;
+                    });
+            } else {
+                resultDiv.innerHTML = '当前浏览器不支持 Cache API';
+            }
+        }
+        
+        function deleteCache() {
+            const resultDiv = document.getElementById('cache-result');
+            
+            if ('caches' in window) {
+                caches.delete('v1')
+                    .then(success => {
+                        if (success) {
+                            resultDiv.innerHTML = '缓存删除成功';
+                        } else {
+                            resultDiv.innerHTML = '缓存删除失败';
+                        }
+                    })
+                    .catch(error => {
+                        resultDiv.innerHTML = `缓存删除失败: ${error.message}`;
+                    });
+            } else {
+                resultDiv.innerHTML = '当前浏览器不支持 Cache API';
+            }
+        }
+        
+        // 8. 缓存性能测试函数
+        function testCachePerformance() {
+            const resultDiv = document.getElementById('performance-result');
+            const testUrl = 'https://via.placeholder.com/100';
+            
+            // 第一次请求（无缓存）
+            const startTime1 = performance.now();
+            fetch(testUrl)
+                .then(response => response.blob())
+                .then(() => {
+                    const endTime1 = performance.now();
+                    const time1 = endTime1 - startTime1;
+                    
+                    // 第二次请求（有缓存）
+                    const startTime2 = performance.now();
+                    fetch(testUrl)
+                        .then(response => response.blob())
+                        .then(() => {
+                            const endTime2 = performance.now();
+                            const time2 = endTime2 - startTime2;
+                            
+                            resultDiv.innerHTML = `
+                                <strong>网络请求缓存测试结果：</strong><br>
+                                第一次请求（无缓存）: ${time1.toFixed(2)}ms<br>
+                                第二次请求（有缓存）: ${time2.toFixed(2)}ms<br>
+                                缓存提升: ${((1 - time2/time1) * 100).toFixed(2)}%
+                            `;
+                            
+                            // 绘制性能图表
+                            drawPerformanceChart([
+                                { name: '无缓存', time: time1 },
+                                { name: '有缓存', time: time2 }
+                            ]);
+                        });
+                })
+                .catch(error => {
+                    resultDiv.innerHTML = `测试失败: ${error.message}`;
+                });
+        }
+        
+        // 测试 Service Worker 缓存性能
+        function testServiceWorkerCache() {
+            const resultDiv = document.getElementById('performance-result');
+            
+            if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+                const testUrl = 'https://via.placeholder.com/150';
+                
+                // 第一次请求（可能缓存）
+                const startTime1 = performance.now();
+                fetch(testUrl)
+                    .then(response => response.blob())
+                    .then(() => {
+                        const endTime1 = performance.now();
+                        const time1 = endTime1 - startTime1;
+                        
+                        // 第二次请求（应该从缓存获取）
+                        const startTime2 = performance.now();
+                        fetch(testUrl)
+                            .then(response => response.blob())
+                            .then(() => {
+                                const endTime2 = performance.now();
+                                const time2 = endTime2 - startTime2;
+                                
+                                resultDiv.innerHTML = `
+                                    <strong>Service Worker 缓存测试结果：</strong><br>
+                                    第一次请求: ${time1.toFixed(2)}ms<br>
+                                    第二次请求（从缓存）: ${time2.toFixed(2)}ms<br>
+                                    缓存提升: ${((1 - time2/time1) * 100).toFixed(2)}%
+                                `;
+                                
+                                // 绘制性能图表
+                                drawPerformanceChart([
+                                    { name: '首次请求', time: time1 },
+                                    { name: '缓存请求', time: time2 }
+                                ]);
+                            });
+                    })
+                    .catch(error => {
+                        resultDiv.innerHTML = `测试失败: ${error.message}`;
+                    });
+            } else {
+                resultDiv.innerHTML = '请先注册 Service Worker 再进行测试';
+            }
+        }
+        
+        // 测试 Cache API 缓存性能
+        function testCacheAPIPerformance() {
+            const resultDiv = document.getElementById('performance-result');
+            
+            if ('caches' in window) {
+                const testUrl = 'https://via.placeholder.com/200';
+                const cacheName = 'performance-test';
+                
+                // 首先清除缓存
+                caches.delete(cacheName)
+                    .then(() => {
+                        // 第一次请求（网络）
+                        const startTime1 = performance.now();
+                        return fetch(testUrl)
+                            .then(response => {
+                                const endTime1 = performance.now();
+                                const time1 = endTime1 - startTime1;
+                                
+                                // 缓存响应
+                                return caches.open(cacheName)
+                                    .then(cache => {
+                                        return cache.put(testUrl, response.clone())
+                                            .then(() => time1);
+                                    });
+                            });
+                    })
+                    .then(time1 => {
+                        // 第二次请求（从缓存）
+                        const startTime2 = performance.now();
+                        return caches.match(testUrl)
+                            .then(response => {
+                                if (response) {
+                                    return response.blob();
+                                } else {
+                                    throw new Error('缓存未命中');
+                                }
+                            })
+                            .then(() => {
+                                const endTime2 = performance.now();
+                                const time2 = endTime2 - startTime2;
+                                
+                                resultDiv.innerHTML = `
+                                    <strong>Cache API 缓存测试结果：</strong><br>
+                                    网络请求: ${time1.toFixed(2)}ms<br>
+                                    缓存请求: ${time2.toFixed(2)}ms<br>
+                                    缓存提升: ${((1 - time2/time1) * 100).toFixed(2)}%
+                                `;
+                                
+                                // 绘制性能图表
+                                drawPerformanceChart([
+                                    { name: '网络请求', time: time1 },
+                                    { name: '缓存请求', time: time2 }
+                                ]);
+                            });
+                    })
+                    .catch(error => {
+                        resultDiv.innerHTML = `测试失败: ${error.message}`;
+                    });
+            } else {
+                resultDiv.innerHTML = '当前浏览器不支持 Cache API';
+            }
+        }
+        
+        // 测试多资源缓存性能
+        function testMultipleResources() {
+            const resultDiv = document.getElementById('performance-result');
+            const resources = [
+                'https://via.placeholder.com/100',
+                'https://via.placeholder.com/150',
+                'https://via.placeholder.com/200'
+            ];
+            
+            // 第一次请求（无缓存）
+            const startTime1 = performance.now();
+            Promise.all(resources.map(url => fetch(url).then(r => r.blob())))
+                .then(() => {
+                    const endTime1 = performance.now();
+                    const time1 = endTime1 - startTime1;
+                    
+                    // 第二次请求（有缓存）
+                    const startTime2 = performance.now();
+                    return Promise.all(resources.map(url => fetch(url).then(r => r.blob())))
+                        .then(() => {
+                            const endTime2 = performance.now();
+                            const time2 = endTime2 - startTime2;
+                            
+                            resultDiv.innerHTML = `
+                                <strong>多资源缓存测试结果：</strong><br>
+                                第一次请求（无缓存）: ${time1.toFixed(2)}ms<br>
+                                第二次请求（有缓存）: ${time2.toFixed(2)}ms<br>
+                                缓存提升: ${((1 - time2/time1) * 100).toFixed(2)}%
+                                <br><br>
+                                <strong>平均每个资源：</strong><br>
+                                无缓存: ${(time1/resources.length).toFixed(2)}ms<br>
+                                有缓存: ${(time2/resources.length).toFixed(2)}ms
+                            `;
+                            
+                            // 绘制性能图表
+                            drawPerformanceChart([
+                                { name: '无缓存', time: time1 },
+                                { name: '有缓存', time: time2 }
+                            ]);
+                        });
+                })
+                .catch(error => {
+                    resultDiv.innerHTML = `测试失败: ${error.message}`;
+                });
+        }
+        
+        // 绘制性能图表
+        function drawPerformanceChart(data) {
+            const chartDiv = document.getElementById('performance-chart');
+            
+            // 简单的柱状图实现
+            chartDiv.innerHTML = `
+                <div style="display: flex; align-items: flex-end; height: 250px; gap: 20px; padding: 20px; border: 1px solid #ddd; border-radius: 5px;">
+                    ${data.map(item => `
+                        <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
+                            <div style="width: 80%; background-color: #4CAF50; transition: height 0.5s ease; height: ${Math.max(10, (item.time / Math.max(...data.map(d => d.time))) * 200)}px; border-radius: 4px 4px 0 0;"></div>
+                            <div style="margin-top: 10px; font-size: 12px; text-align: center;">${item.name}<br>${item.time.toFixed(1)}ms</div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+        
+        // 页面加载时检查 Service Worker 状态
+        window.addEventListener('load', () => {
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.ready
+                    .then(registration => {
+                        console.log('Service Worker 已就绪:', registration);
+                    })
+                    .catch(error => {
+                        console.log('Service Worker 就绪失败:', error);
+                    });
+            }
+        });
+    </script>
+</body>
+</html>
