@@ -1,0 +1,47 @@
+stages:
+  - test
+  - build
+  - deploy_staging
+  - deploy_production
+
+test:
+  stage: test
+  image: node:16
+  script:
+    - npm install
+    - npm test
+  only:
+    - main
+    - develop
+    - /^feature/.*$
+
+build:
+  stage: build
+  image: node:16
+  script:
+    - npm install
+    - npm run build
+  artifacts:
+    paths:
+      - dist/
+  only:
+    - main
+    - develop
+
+deploy_staging:
+  stage: deploy_staging
+  image: alpine:latest
+  script:
+    - apk add --no-cache lftp
+    - lftp -u $STAGING_FTP_USER,$STAGING_FTP_PASS -e "mirror -R dist/ /staging/; quit" $STAGING_FTP_HOST
+  only:
+    - develop
+
+deploy_production:
+  stage: deploy_production
+  image: alpine:latest
+  script:
+    - apk add --no-cache lftp
+    - lftp -u $PROD_FTP_USER,$PROD_FTP_PASS -e "mirror -R dist/ /public_html/; quit" $PROD_FTP_HOST
+  only:
+    - main
