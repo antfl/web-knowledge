@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>浏览器性能优化示例</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        .example {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .code-block {
+            background-color: #f0f0f0;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            margin: 10px 0;
+        }
+        button {
+            padding: 8px 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .result {
+            margin: 10px 0;
+            padding: 10px;
+            background-color: #e8f5e8;
+            border-radius: 5px;
+        }
+        .warning {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .performance-metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin: 20px 0;
+        }
+        .metric-card {
+            background-color: #f0f0f0;
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+        }
+        .metric-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+        .metric-label {
+            font-size: 14px;
+            color: #666;
+            margin-top: 5px;
+        }
+        #animation-container {
+            width: 100%;
+            height: 200px;
+            position: relative;
+            border: 1px solid #ddd;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        .animation-box {
+            width: 50px;
+            height: 50px;
+            background-color: #4CAF50;
+            position: absolute;
+            top: 50%;
+            left: 0;
+            transform: translateY(-50%);
+        }
+        #virtual-list {
+            width: 100%;
+            height: 400px;
+            border: 1px solid #ddd;
+            overflow-y: auto;
+            position: relative;
+        }
+        .list-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+        }
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+    </style>
+    <!-- 预加载关键资源 -->
+    <link rel="preload" href="https://via.placeholder.com/100" as="image">
+</head>
+<body>
+    <div class="container">
+        <h1>浏览器性能优化示例</h1>
+        
+        <!-- 1. 性能指标 -->
+        <div class="example">
+            <h2>1. 性能指标</h2>
+            <button onclick="measurePerformance()">测量性能指标</button>
+            <div class="performance-metrics" id="performance-metrics">
+                <div class="metric-card">
+                    <div class="metric-value" id="fcp-value">--</div>
+                    <div class="metric-label">首次内容绘制 (FCP)</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="lcp-value">--</div>
+                    <div class="metric-label">最大内容绘制 (LCP)</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="cls-value">--</div>
+                    <div class="metric-label">累积布局偏移 (CLS)</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="tti-value">--</div>
+                    <div class="metric-label">时间到交互 (TTI)</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 2. 网络优化 -->
+        <div class="example">
+            <h2>2. 网络优化</h2>
+            <h3>2.1 资源预加载</h3>
+            <div class="code-block">
+<!-- 预连接 -->
+<link rel="preconnect" href="https://example.com">
+
+<!-- 预加载 -->
+<link rel="preload" href="style.css" as="style">
+<link rel="preload" href="script.js" as="script">
+<link rel="preload" href="image.jpg" as="image">
+
+<!-- 预获取 -->
+<link rel="prefetch" href="next-page.html">
+            </div>
+            
+            <h3>2.2 缓存策略</h3>
+            <button onclick="testCacheStrategy()">测试缓存策略</button>
+            <div id="cache-result" class="result"></div>
+        </div>
+        
+        <!-- 3. 渲染优化 -->
+        <div class="example">
+            <h2>3. 渲染优化</h2>
+            
+            <h3>3.1 CSS 动画优化</h3>
+            <button onclick="startOptimizedAnimation()">开始优化动画</button>
+            <button onclick="startUnoptimizedAnimation()">开始未优化动画</button>
+            <button onclick="stopAnimation()">停止动画</button>
+            <div id="animation-container">
+                <div class="animation-box" id="animation-box"></div>
+            </div>
+            
+            <h3>3.2 DOM 操作优化</h3>
+            <button onclick="testDOMOperations()">测试 DOM 操作</button>
+            <div id="dom-result" class="result"></div>
+        </div>
+        
+        <!-- 4. 资源优化 -->
+        <div class="example">
+            <h2>4. 资源优化</h2>
+            
+            <h3>4.1 图片优化</h3>
+            <div class="code-block">
+<!-- 响应式图片 -->
+<img src="image-small.jpg" 
+     srcset="image-small.jpg 400w, image-medium.jpg 800w, image-large.jpg 1200w"
+     sizes="(max-width: 600px) 400px, (max-width: 1200px) 800px, 1200px"
+     alt="Example image">
+
+<!-- 延迟加载 -->
+<img src="placeholder.jpg" data-src="actual-image.jpg" loading="lazy" alt="Lazy loaded image">
+            </div>
+            
+            <h3>4.2 字体优化</h3>
+            <div class="code-block">
+<!-- 字体预加载 -->
+<link rel="preload" href="font.woff2" as="font" type="font/woff2" crossorigin>
+
+<!-- 字体显示策略 -->
+<style>
+    @font-face {
+        font-family: 'CustomFont';
+        src: url('font.woff2') format('woff2');
+        font-display: swap;
+    }
+</style>
+            </div>
+        </div>
+        
+        <!-- 5. 交互优化 -->
+        <div class="example">
+            <h2>5. 交互优化</h2>
+            
+            <h3>5.1 防抖和节流</h3>
+            <input type="text" id="search-input" placeholder="输入搜索内容...">
+            <div id="debounce-result" class="result"></div>
+            
+            <h3>5.2 事件委托</h3>
+            <div id="event-container" style="padding: 20px; border: 1px solid #ddd;">
+                <button class="event-btn">按钮 1</button>
+                <button class="event-btn">按钮 2</button>
+                <button class="event-btn">按钮 3</button>
+                <button class="event-btn">按钮 4</button>
+                <button class="event-btn">按钮 5</button>
+            </div>
+            <div id="event-result" class="result"></div>
+        </div>
+        
+        <!-- 6. 虚拟列表 -->
+        <div class="example">
+            <h2>6. 虚拟列表</h2>
+            <button onclick="createVirtualList()">创建虚拟列表</button>
+            <div id="virtual-list"></div>
+            <div id="virtual-list-result" class="result"></div>
+        </div>
+        
+        <!-- 7. 骨架屏 -->
+        <div class="example">
+            <h2>7. 骨架屏</h2>
+            <button onclick="showSkeleton()">显示骨架屏</button>
+            <button onclick="hideSkeleton()">隐藏骨架屏</button>
+            <div id="skeleton-container" style="width: 100%;">
+                <div class="skeleton" style="height: 200px; border-radius: 5px; margin-bottom: 20px;"></div>
+                <div class="skeleton" style="height: 30px; border-radius: 5px; margin-bottom: 10px;"></div>
+                <div class="skeleton" style="height: 30px; border-radius: 5px; margin-bottom: 10px; width: 80%;"></div>
+                <div class="skeleton" style="height: 30px; border-radius: 5px; width: 60%;"></div>
+            </div>
+        </div>
+        
+        <!-- 8. Web Workers -->
+        <div class="example">
+            <h2>8. Web Workers</h2>
+            <button onclick="testWebWorker()">测试 Web Worker</button>
+            <div id="worker-result" class="result"></div>
+        </div>
+    </div>
+    
+    <script>
+        // 1. 性能指标测量
+        function measurePerformance() {
+            const metrics = document.getElementById('performance-metrics');
+            
+            // 使用 Performance API 测量性能指标
+            if ('performance' in window) {
+                // 测量 FCP
+                if ('paintTiming' in performance) {
+                    const paintEntries = performance.getEntriesByType('paint');
+                    paintEntries.forEach(entry => {
+                        if (entry.name === 'first-contentful-paint') {
+                            document.getElementById('fcp-value').textContent = entry.startTime.toFixed(2) + 'ms';
+                        }
+                    });
+                }
+                
+                // 测量 LCP
+                if ('largestContentfulPaint' in performance) {
+                    performance.getEntriesByType('largest-contentful-paint').forEach(entry => {
+                        document.getElementById('lcp-value').textContent = entry.startTime.toFixed(2) + 'ms';
+                    });
+                }
+                
+                // 测量 CLS
+                if ('layoutShift' in performance) {
+                    const layoutShiftEntries = performance.getEntriesByType('layout-shift');
+                    let totalCLS = 0;
+                    layoutShiftEntries.forEach(entry => {
+                        if (!entry.hadRecentInput) {
+                            totalCLS += entry.value;
+                        }
+                    });
+                    document.getElementById('cls-value').textContent = totalCLS.toFixed(4);
+                }
+                
+                // 模拟 TTI 测量
+                setTimeout(() => {
+                    document.getElementById('tti-value').textContent = '~' + performance.now().toFixed(2) + 'ms';
+                }, 1000);
+            }
+        }
+        
+        // 2. 缓存策略测试
+        function testCacheStrategy() {
+            const resultDiv = document.getElementById('cache-result');
+            const testUrl = 'https://via.placeholder.com/100';
+            
+            // 第一次请求（无缓存）
+            const startTime1 = performance.now();
+            fetch(testUrl)
+                .then(response => response.blob())
+                .then(() => {
+                    const endTime1 = performance.now();
+                    const time1 = endTime1 - startTime1;
+                    
+                    // 第二次请求（有缓存）
+                    const startTime2 = performance.now();
+                    fetch(testUrl)
+                        .then(response => response.blob())
+                        .then(() => {
+                            const endTime2 = performance.now();
+                            const time2 = endTime2 - startTime2;
+                            
+                            resultDiv.innerHTML = `
+                                <strong>缓存策略测试结果：</strong><br>
+                                第一次请求（无缓存）: ${time1.toFixed(2)}ms<br>
+                                第二次请求（有缓存）: ${time2.toFixed(2)}ms<br>
+                                缓存提升: ${((1 - time2/time1) * 100).toFixed(2)}%
+                            `;
+                        });
+                })
+                .catch(error => {
+                    resultDiv.innerHTML = `测试失败: ${error.message}`;
+                });
+        }
+        
+        // 3. 动画优化
+        let animationId;
+        const box = document.getElementById('animation-box');
+        
+        function startOptimizedAnimation() {
+            stopAnimation();
+            let position = 0;
+            const containerWidth = document.getElementById('animation-container').offsetWidth - 50;
+            
+            function animate() {
+                position = (position + 2) % (containerWidth + 100);
+                if (position > containerWidth) {
+                    position = -50;
+                }
+                // 使用 transform 进行动画，性能更好
+                box.style.transform = `translate(${position}px, -50%)`;
+                animationId = requestAnimationFrame(animate);
+            }
+            
+            animate();
+        }
+        
+        function startUnoptimizedAnimation() {
+            stopAnimation();
+            let position = 0;
+            const containerWidth = document.getElementById('animation-container').offsetWidth - 50;
+            
+            function animate() {
+                position = (position + 2) % (containerWidth + 100);
+                if (position > containerWidth) {
+                    position = -50;
+                }
+                // 使用 left 属性进行动画，性能较差
+                box.style.left = position + 'px';
+                animationId = requestAnimationFrame(animate);
+            }
+            
+            animate();
+        }
+        
+        function stopAnimation() {
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+        }
+        
+        // 4. DOM 操作优化
+        function testDOMOperations() {
+            const resultDiv = document.getElementById('dom-result');
+            const container = document.createElement('div');
+            
+            // 测试直接操作 DOM
+            const startTime1 = performance.now();
+            for (let i = 0; i < 1000; i++) {
+                const div = document.createElement('div');
+                div.textContent = `Item ${i}`;
+                container.appendChild(div);
+            }
+            const endTime1 = performance.now();
+            const time1 = endTime1 - startTime1;
+            
+            // 测试使用 DocumentFragment
+            const startTime2 = performance.now();
+            const fragment = document.createDocumentFragment();
+            for (let i = 0; i < 1000; i++) {
+                const div = document.createElement('div');
+                div.textContent = `Item ${i}`;
+                fragment.appendChild(div);
+            }
+            container.appendChild(fragment);
+            const endTime2 = performance.now();
+            const time2 = endTime2 - startTime2;
+            
+            resultDiv.innerHTML = `
+                <strong>DOM 操作测试结果：</strong><br>
+                直接操作 DOM (1000 次): ${time1.toFixed(2)}ms<br>
+                使用 DocumentFragment (1000 次): ${time2.toFixed(2)}ms<br>
+                性能提升: ${((1 - time2/time1) * 100).toFixed(2)}%
+            `;
+        }
+        
+        // 5. 防抖和节流
+        function debounce(func, wait) {
+            let timeout;
+            return function() {
+                const context = this;
+                const args = arguments;
+                clearTimeout(timeout);
+                timeout = setTimeout(() => {
+                    func.apply(context, args);
+                }, wait);
+            };
+        }
+        
+        const searchInput = document.getElementById('search-input');
+        const debounceResult = document.getElementById('debounce-result');
+        
+        const debouncedSearch = debounce(function(e) {
+            debounceResult.innerHTML = `搜索内容: ${e.target.value}`;
+        }, 300);
+        
+        searchInput.addEventListener('input', debouncedSearch);
+        
+        // 6. 事件委托
+        const eventContainer = document.getElementById('event-container');
+        const eventResult = document.getElementById('event-result');
+        
+        eventContainer.addEventListener('click', function(e) {
+            if (e.target.classList.contains('event-btn')) {
+                eventResult.innerHTML = `点击了: ${e.target.textContent}`;
+            }
+        });
+        
+        // 7. 虚拟列表
+        function createVirtualList() {
+            const listContainer = document.getElementById('virtual-list');
+            const resultDiv = document.getElementById('virtual-list-result');
+            
+            // 清空容器
+            listContainer.innerHTML = '';
+            
+            // 创建大量数据
+            const items = [];
+            for (let i = 0; i < 10000; i++) {
+                items.push(`Item ${i}`);
+            }
+            
+            const startTime = performance.now();
+            
+            // 虚拟列表实现
+            const itemHeight = 40;
+            const containerHeight = listContainer.offsetHeight;
+            const visibleCount = Math.ceil(containerHeight / itemHeight) + 2;
+            
+            listContainer.style.position = 'relative';
+            listContainer.style.height = containerHeight + 'px';
+            
+            // 创建占位元素
+            const placeholder = document.createElement('div');
+            placeholder.style.height = (items.length * itemHeight) + 'px';
+            listContainer.appendChild(placeholder);
+            
+            // 创建可见项目容器
+            const visibleContainer = document.createElement('div');
+            visibleContainer.style.position = 'absolute';
+            visibleContainer.style.top = '0';
+            visibleContainer.style.left = '0';
+            visibleContainer.style.width = '100%';
+            listContainer.appendChild(visibleContainer);
+            
+            // 渲染可见项目
+            function renderVisibleItems() {
+                const scrollTop = listContainer.scrollTop;
+                const startIndex = Math.floor(scrollTop / itemHeight);
+                const endIndex = Math.min(startIndex + visibleCount, items.length);
+                
+                visibleContainer.innerHTML = '';
+                visibleContainer.style.transform = `translateY(${startIndex * itemHeight}px)`;
+                
+                for (let i = startIndex; i < endIndex; i++) {
+                    const item = document.createElement('div');
+                    item.className = 'list-item';
+                    item.textContent = items[i];
+                    visibleContainer.appendChild(item);
+                }
+            }
+            
+            // 初始渲染
+            renderVisibleItems();
+            
+            // 滚动时重新渲染
+            listContainer.addEventListener('scroll', renderVisibleItems);
+            
+            const endTime = performance.now();
+            resultDiv.innerHTML = `
+                <strong>虚拟列表测试结果：</strong><br>
+                创建 10000 个项目的虚拟列表耗时: ${(endTime - startTime).toFixed(2)}ms<br>
+                注意：虚拟列表只渲染可见区域的项目，大大提高了性能。
+            `;
+        }
+        
+        // 8. 骨架屏
+        function showSkeleton() {
+            document.getElementById('skeleton-container').style.display = 'block';
+        }
+        
+        function hideSkeleton() {
+            document.getElementById('skeleton-container').style.display = 'none';
+        }
+        
+        // 9. Web Workers
+        function testWebWorker() {
+            const resultDiv = document.getElementById('worker-result');
+            
+            if (window.Worker) {
+                // 创建 Worker
+                const worker = new Worker(URL.createObjectURL(new Blob([`
+                    self.onmessage = function(e) {
+                        const { numbers } = e.data;
+                        
+                        // 执行密集计算
+                        function fibonacci(n) {
+                            if (n <= 1) return n;
+                            return fibonacci(n - 1) + fibonacci(n - 2);
+                        }
+                        
+                        const results = numbers.map(num => fibonacci(num));
+                        self.postMessage({ results });
+                    }
+                `], { type: 'application/javascript' })));
+                
+                const numbers = [30, 35, 40];
+                const startTime = performance.now();
+                
+                worker.onmessage = function(e) {
+                    const endTime = performance.now();
+                    resultDiv.innerHTML = `
+                        <strong>Web Worker 测试结果：</strong><br>
+                        计算斐波那契数列: ${numbers.join(', ')}<br>
+                        结果: ${e.data.results.join(', ')}<br>
+                        耗时: ${(endTime - startTime).toFixed(2)}ms<br>
+                        注意：Web Worker 在后台线程执行计算，不会阻塞主线程。
+                    `;
+                    worker.terminate();
+                };
+                
+                worker.postMessage({ numbers });
+            } else {
+                resultDiv.innerHTML = '当前浏览器不支持 Web Workers';
+            }
+        }
+        
+        // 页面加载时测量性能
+        window.addEventListener('load', () => {
+            setTimeout(measurePerformance, 1000);
+        });
+    </script>
+</body>
+</html>
